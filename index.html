@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>絕對音感調音測驗 | Absolute Pitch Tuner</title>
+  <style>
+    :root {
+      --bg-main: #0d1117;
+      --bg-panel: #161b22;
+      --bg-elevated: #21262d;
+      --border: #30363d;
+      --text-primary: #f0f6fc;
+      --text-secondary: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79c0ff;
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+      --purple: #bc8cff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 820px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      background: linear-gradient(90deg, #58a6ff, #bc8cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      margin-bottom: 20px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* 設定畫面 */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .setting-group {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .setting-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .option-btn {
+      flex: 1;
+      min-width: 68px;
+      padding: 8px 10px;
+      background: var(--bg-panel);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+
+    .option-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .option-btn.active {
+      background: rgba(88, 166, 255, 0.16);
+      border-color: var(--accent);
+      color: var(--accent-hover);
+      font-weight: 600;
+    }
+
+    .mode-desc {
+      background: rgba(88, 166, 255, 0.08);
+      border-left: 3px solid var(--accent);
+      padding: 12px 14px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 14px 20px;
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .primary-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .primary-btn:active {
+      transform: scale(0.99);
+    }
+
+    /* 測驗畫面 */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .badge strong {
+      color: var(--text-primary);
+    }
+
+    .target-display {
+      text-align: center;
+      padding: 20px 12px;
+      background: radial-gradient(circle at center, rgba(88, 166, 255, 0.12), transparent 70%);
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .target-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+    }
+
+    .target-note {
+      font-size: 4.2rem;
+      font-weight: 800;
+      line-height: 1.05;
+      color: var(--text-primary);
+      text-shadow: 0 0 24px rgba(88, 166, 255, 0.35);
+    }
+
+    .target-sub {
+      margin-top: 8px;
+      font-size: 0.88rem;
+      color: var(--purple);
+    }
+
+    /* 聲音控制列 */
+    .audio-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .play-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: rgba(88, 166, 255, 0.14);
+      color: var(--accent-hover);
+      font-size: 0.98rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .play-btn.playing {
+      background: var(--accent);
+      color: #0d1117;
+      box-shadow: 0 0 18px rgba(88, 166, 255, 0.45);
+    }
+
+    .secondary-btn {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .secondary-btn:hover {
+      border-color: var(--text-secondary);
+    }
+
+    /* 盲測調音滑桿與按鈕 */
+    .tuner-box {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 10px;
+      border-radius: 5px;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      outline: none;
+      margin-bottom: 18px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid var(--text-primary);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(88, 166, 255, 0.6);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid var(--text-primary);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(88, 166, 255, 0.6);
+    }
+
+    .fine-controls {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 520px) {
+      .fine-controls {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .tune-btn {
+      padding: 12px 8px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .tune-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: rgba(88, 166, 255, 0.08);
+    }
+
+    .tune-btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .tune-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .tune-btn span.hint {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    /* 練習模式即時回饋區 */
+    .practice-feedback {
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: 10px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .cents-readout {
+      font-size: 1.65rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .meter-bar {
+      position: relative;
+      height: 14px;
+      background: #0d1117;
+      border-radius: 7px;
+      margin: 14px auto;
+      max-width: 440px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .meter-green-zone {
+      position: absolute;
+      left: 45%;
+      width: 10%;
+      top: 0;
+      bottom: 0;
+      background: rgba(63, 185, 80, 0.22);
+    }
+
+    .meter-center {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--success);
+      transform: translateX(-50%);
+      z-index: 2;
+    }
+
+    .meter-marker {
+      position: absolute;
+      top: 1px;
+      bottom: 1px;
+      width: 10px;
+      border-radius: 4px;
+      background: var(--accent);
+      transform: translateX(-50%);
+      transition: left 0.25s ease;
+      z-index: 3;
+    }
+
+    .ab-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    /* 題間白噪音清空記憶畫面 */
+    .noise-overlay {
+      text-align: center;
+      padding: 48px 20px;
+    }
+
+    .wave-bars {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      height: 40px;
+      margin-bottom: 16px;
+    }
+
+    .wave-bars div {
+      width: 6px;
+      height: 16px;
+      background: var(--purple);
+      border-radius: 3px;
+      animation: bounce 0.6s infinite ease-in-out alternate;
+    }
+
+    .wave-bars div:nth-child(2) { animation-delay: 0.1s; }
+    .wave-bars div:nth-child(3) { animation-delay: 0.2s; }
+    .wave-bars div:nth-child(4) { animation-delay: 0.3s; }
+    .wave-bars div:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      from { height: 10px; opacity: 0.4; }
+      to { height: 38px; opacity: 1; }
+    }
+
+    /* 結算畫面 */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .stat-card .stat-title {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .stat-card .stat-val {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .rank-banner {
+      text-align: center;
+      padding: 18px 16px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(188, 140, 255, 0.15));
+      border: 1px solid rgba(188, 140, 255, 0.4);
+      margin-bottom: 20px;
+    }
+
+    .rank-banner h2 {
+      font-size: 1.38rem;
+      margin-bottom: 6px;
+      color: var(--purple);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--text-secondary);
+      font-weight: 600;
+      background: var(--bg-elevated);
+    }
+
+    .mini-play {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .mini-play:hover {
+      border-color: var(--accent);
+      color: var(--accent-hover);
+    }
+
+    .comment-tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: rgba(88, 166, 255, 0.12);
+      border: 1px solid rgba(88, 166, 255, 0.3);
+      color: var(--accent-hover);
+      white-space: nowrap;
+    }
+    .comment-tag.t-god { background: rgba(63, 185, 80, 0.16); border-color: rgba(63, 185, 80, 0.45); color: #56d364; }
+    .comment-tag.t-pro { background: rgba(88, 166, 255, 0.16); border-color: rgba(88, 166, 255, 0.45); color: #79c0ff; }
+    .comment-tag.t-mid { background: rgba(210, 153, 34, 0.16); border-color: rgba(210, 153, 34, 0.45); color: #e3b341; }
+    .comment-tag.t-low { background: rgba(248, 81, 73, 0.16); border-color: rgba(248, 81, 73, 0.45); color: #ff7b72; }
+
+    .fb-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      background: rgba(188, 140, 255, 0.15);
+      border: 1px solid rgba(188, 140, 255, 0.4);
+      color: var(--purple);
+    }
+
+    .c-good { color: var(--success); font-weight: 700; }
+    .c-ok { color: var(--warning); font-weight: 700; }
+    .c-bad { color: var(--danger); font-weight: 700; }
+
+    .kbd-hint {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    kbd {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.75rem;
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>絕對音感調音測驗</h1>
+      <p>聆聽走音的初始音高，憑內在音高記憶調回準確頻率</p>
+    </header>
+
+    <!-- 1. 設定畫面 -->
+    <div id="setup-screen" class="card">
+      <div class="settings-grid">
+        <div class="setting-group">
+          <label>測驗模式</label>
+          <div class="btn-group" id="mode-group">
+            <button class="option-btn active" data-val="strict">嚴格盲測</button>
+            <button class="option-btn" data-val="practice">練習模式</button>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>基準音高 (A4)</label>
+          <div class="btn-group" id="a4-group">
+            <button class="option-btn active" data-val="440">440 Hz</button>
+            <button class="option-btn" data-val="442">442 Hz</button>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>題目數量</label>
+          <div class="btn-group" id="count-group">
+            <button class="option-btn" data-val="5">5 題</button>
+            <button class="option-btn active" data-val="10">10 題</button>
+            <button class="option-btn" data-val="15">15 題</button>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>音色選擇</label>
+          <div class="btn-group" id="wave-group">
+            <button class="option-btn active" data-val="sine">純音</button>
+            <button class="option-btn" data-val="triangle">柔和</button>
+            <button class="option-btn" data-val="strings">類弦樂</button>
+          </div>
+        </div>
+
+        <div class="setting-group" style="grid-column: 1 / -1;">
+          <label>考題音域範圍</label>
+          <div class="btn-group" id="range-group">
+            <button class="option-btn active" data-val="standard">標準音域 (C3 ~ B5)</button>
+            <button class="option-btn" data-val="violin">小提琴空弦區 (G3, D4, A4, E5 鄰近)</button>
+            <button class="option-btn" data-val="center">中音單八度 (C4 ~ B4)</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mode-description" class="mode-desc">
+        <strong>嚴格盲測模式：</strong>作答期間不顯示任何頻率與音分誤差，題目之間自動播放 0.85 秒柔和粉紅噪音清空短期記憶，全部完成後統一結算絕對音感精準度。
+      </div>
+
+      <button id="start-btn" class="primary-btn">開始測驗</button>
+    </div>
+
+    <!-- 2. 測驗畫面 -->
+    <div id="quiz-screen" class="card hidden">
+      <div id="quiz-active-area">
+        <div class="top-bar">
+          <span class="badge">第 <strong id="q-current">1</strong> / <strong id="q-total">10</strong> 題</span>
+          <span class="badge">基準 <strong id="display-a4">440 Hz</strong> · <strong id="display-mode">嚴格盲測</strong></span>
+          <button id="quit-btn" class="mini-play">結束返回</button>
+        </div>
+
+        <div class="target-display">
+          <div class="target-label">目標音名 (TARGET PITCH)</div>
+          <div class="target-note" id="target-note-text">A4</div>
+          <div class="target-sub" id="target-enharmonic">唱名：La</div>
+        </div>
+
+        <div class="audio-bar">
+          <button id="toggle-sound-btn" class="play-btn">
+            <span id="play-icon">🔊</span>
+            <span id="play-text">持續播放中</span>
+          </button>
+          <button id="pulse-sound-btn" class="secondary-btn">單次點聽 (1.5秒)</button>
+        </div>
+
+        <div class="tuner-box">
+          <div class="slider-labels">
+            <span>◀ 調低 (Flat)</span>
+            <span>初始走音基準點</span>
+            <span>調高 (Sharp) ▶</span>
+          </div>
+          <input type="range" id="pitch-slider" min="-280" max="280" step="1" value="0" />
+
+          <div class="fine-controls">
+            <button class="tune-btn" data-delta="-25">
+              <span>◀◀ 粗調降</span>
+              <span class="hint">Shift + ←</span>
+            </button>
+            <button class="tune-btn" data-delta="-3">
+              <span>◀ 微調降</span>
+              <span class="hint">← 方向鍵</span>
+            </button>
+            <button class="tune-btn" data-delta="3">
+              <span>微調升 ▶</span>
+              <span class="hint">→ 方向鍵</span>
+            </button>
+            <button class="tune-btn" data-delta="25">
+              <span>粗調升 ▶▶</span>
+              <span class="hint">Shift + →</span>
+            </button>
+          </div>
+        </div>
+
+        <button id="submit-answer-btn" class="primary-btn">確認送出音高</button>
+
+        <!-- 練習模式即時回饋區 -->
+        <div id="practice-feedback" class="practice-feedback hidden">
+          <div class="cents-readout" id="fb-cents-text">+0.0 cents</div>
+          <div id="fb-detail-text" style="font-size: 0.88rem; color: var(--text-secondary);"></div>
+          <div id="fb-comment-badge" class="fb-badge"></div>
+          <div class="meter-bar">
+            <div class="meter-green-zone"></div>
+            <div class="meter-center"></div>
+            <div class="meter-marker" id="fb-meter-marker" style="left: 50%;"></div>
+          </div>
+          <div class="ab-buttons">
+            <button id="listen-yours-btn" class="secondary-btn">聽你的音高</button>
+            <button id="listen-target-btn" class="secondary-btn">聽標準音高</button>
+            <button id="next-question-btn" class="primary-btn" style="width: auto; padding: 10px 24px;">下一題 ▶</button>
+          </div>
+        </div>
+
+        <div class="kbd-hint">
+          快捷鍵：<kbd>←</kbd> <kbd>→</kbd> 微調 ｜ <kbd>Shift</kbd>+<kbd>←/→</kbd> 粗調 ｜ <kbd>Space</kbd> 暫停/播放 ｜ <kbd>Enter</kbd> 送出
+        </div>
+      </div>
+
+      <!-- 題間白噪音清空記憶畫面 -->
+      <div id="noise-intermission" class="noise-overlay hidden">
+        <div class="wave-bars">
+          <div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <h3 style="margin-bottom: 8px; color: var(--purple);">正在清空短期音高記憶...</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">避免上一題殘留的相對音感干擾下一題判斷</p>
+      </div>
+    </div>
+
+    <!-- 3. 結算畫面 -->
+    <div id="result-screen" class="card hidden">
+      <div class="rank-banner">
+        <h2 id="rank-title">精準絕對音感</h2>
+        <p id="rank-desc" style="color: var(--text-secondary); font-size: 0.92rem;">你的音高記憶非常穩定！</p>
+      </div>
+
+      <div class="summary-grid">
+        <div class="stat-card">
+          <div class="stat-title">平均誤差</div>
+          <div class="stat-val" id="stat-avg-cents">0.0 ¢</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">±15¢ 內達標率</div>
+          <div class="stat-val" id="stat-accuracy">0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">最精準單題</div>
+          <div class="stat-val" id="stat-best">0.0 ¢</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">平均調音耗時</div>
+          <div class="stat-val" id="stat-time">0.0 s</div>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto; margin-bottom: 22px;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>題目</th>
+              <th>初始走音</th>
+              <th>你的誤差</th>
+              <th>音準評語</th>
+              <th>標準 / 你的頻率</th>
+              <th>音高比對</th>
+            </tr>
+          </thead>
+          <tbody id="result-tbody"></tbody>
+        </table>
+      </div>
+
+      <button id="restart-btn" class="primary-btn">再測一輪</button>
+    </div>
+  </div>
+
+  <script>
+    // 音名與 MIDI 定義
+    const NOTE_NAMES = [
+      { sharp: "C", flat: "C", solfege: "Do" },
+      { sharp: "C#", flat: "Db", solfege: "升Do / 降Re" },
+      { sharp: "D", flat: "D", solfege: "Re" },
+      { sharp: "D#", flat: "Eb", solfege: "升Re / 降Mi" },
+      { sharp: "E", flat: "E", solfege: "Mi" },
+      { sharp: "F", flat: "F", solfege: "Fa" },
+      { sharp: "F#", flat: "Gb", solfege: "升Fa / 降Sol" },
+      { sharp: "G", flat: "G", solfege: "Sol" },
+      { sharp: "G#", flat: "Ab", solfege: "升Sol / 降La" },
+      { sharp: "A", flat: "A", solfege: "La" },
+      { sharp: "A#", flat: "Bb", solfege: "升La / 降Si" },
+      { sharp: "B", flat: "B", solfege: "Si" }
+    ];
+
+    // 狀態管理
+    const state = {
+      mode: "strict",
+      a4: 440,
+      totalQuestions: 10,
+      wave: "sine",
+      range: "standard",
+      questions: [],
+      currentIndex: 0,
+      currentOffsetCents: 0,
+      questionStartTime: 0,
+      isPlaying: false,
+      answeredCurrent: false
+    };
+
+    // Web Audio API 引擎
+    let audioCtx = null;
+    let mainOsc = null;
+    let subOsc = null;
+    let filterNode = null;
+    let masterGain = null;
+    let pulseTimer = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    function midiToFreq(midi, a4 = 440) {
+      return a4 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    function applyCents(baseFreq, cents) {
+      return baseFreq * Math.pow(2, cents / 1200);
+    }
+
+    function stopContinuousTone(immediate = false) {
+      if (pulseTimer) {
+        clearTimeout(pulseTimer);
+        pulseTimer = null;
+      }
+      if (masterGain && audioCtx) {
+        const now = audioCtx.currentTime;
+        masterGain.gain.cancelScheduledValues(now);
+        if (immediate) {
+          masterGain.gain.setValueAtTime(0, now);
+        } else {
+          masterGain.gain.setTargetAtTime(0, now, 0.025);
+        }
+      }
+      const oldMain = mainOsc;
+      const oldSub = subOsc;
+      const oldFilter = filterNode;
+      mainOsc = null;
+      subOsc = null;
+      filterNode = null;
+
+      setTimeout(() => {
+        if (oldMain) { try { oldMain.stop(); oldMain.disconnect(); } catch (e) {} }
+        if (oldSub) { try { oldSub.stop(); oldSub.disconnect(); } catch (e) {} }
+        if (oldFilter) { try { oldFilter.disconnect(); } catch (e) {} }
+      }, immediate ? 10 : 120);
+
+      state.isPlaying = false;
+      updatePlayButtonUI();
+    }
+
+    function startContinuousTone(freq) {
+      initAudio();
+      stopContinuousTone(true);
+
+      const now = audioCtx.currentTime;
+      masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(0.0001, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.22, now + 0.06);
+      masterGain.connect(audioCtx.destination);
+
+      mainOsc = audioCtx.createOscillator();
+      mainOsc.frequency.setValueAtTime(freq, now);
+
+      if (state.wave === "strings") {
+        // 類弦樂：鋸齒波 + 溫暖低通濾波 + 柔和三角波層次
+        mainOsc.type = "sawtooth";
+        filterNode = audioCtx.createBiquadFilter();
+        filterNode.type = "lowpass";
+        filterNode.frequency.setValueAtTime(Math.min(freq * 3.5, 2400), now);
+        filterNode.Q.setValueAtTime(1.2, now);
+
+        subOsc = audioCtx.createOscillator();
+        subOsc.type = "triangle";
+        subOsc.frequency.setValueAtTime(freq, now);
+
+        const subGain = audioCtx.createGain();
+        subGain.gain.setValueAtTime(0.45, now);
+
+        mainOsc.connect(filterNode);
+        subOsc.connect(subGain);
+        subGain.connect(filterNode);
+        filterNode.connect(masterGain);
+
+        mainOsc.start(now);
+        subOsc.start(now);
+      } else {
+        mainOsc.type = state.wave;
+        mainOsc.connect(masterGain);
+        mainOsc.start(now);
+      }
+
+      state.isPlaying = true;
+      updatePlayButtonUI();
+    }
+
+    function updateToneFrequency(freq) {
+      if (!audioCtx || !state.isPlaying || !mainOsc) return;
+      const now = audioCtx.currentTime;
+      mainOsc.frequency.setTargetAtTime(freq, now, 0.015);
+      if (subOsc) {
+        subOsc.frequency.setTargetAtTime(freq, now, 0.015);
+      }
+      if (filterNode) {
+        filterNode.frequency.setTargetAtTime(Math.min(freq * 3.5, 2400), now, 0.02);
+      }
+    }
+
+    function playOneShot(freq, durationSec = 1.2) {
+      initAudio();
+      stopContinuousTone(true);
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.22, now + 0.04);
+      gain.gain.setValueAtTime(0.22, now + durationSec - 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+
+      if (state.wave === "strings") {
+        osc.type = "sawtooth";
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(Math.min(freq * 3.5, 2400), now);
+        osc.connect(filter);
+        filter.connect(gain);
+      } else {
+        osc.type = state.wave;
+        osc.connect(gain);
+      }
+
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + durationSec + 0.02);
+    }
+
+    // 柔和粉紅/白噪音清空短期音高記憶
+    function playMemoryFlushNoise(durationSec = 0.85) {
+      initAudio();
+      const bufferSize = Math.floor(audioCtx.sampleRate * durationSec);
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99765 * b0 + white * 0.0990460;
+        b1 = 0.96300 * b1 + white * 0.2965164;
+        b2 = 0.57000 * b2 + white * 1.0526913;
+        data[i] = (b0 + b1 + b2 + white * 0.1848) * 0.06;
+      }
+
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+
+      const gain = audioCtx.createGain();
+      const now = audioCtx.currentTime;
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.35, now + 0.08);
+      gain.gain.setValueAtTime(0.35, now + durationSec - 0.12);
+      gain.gain.linearRampToValueAtTime(0.001, now + durationSec);
+
+      noise.connect(gain);
+      gain.connect(audioCtx.destination);
+      noise.start(now);
+    }
+
+    // 題庫生成邏輯（避免連續同音名與過近音程）
+    function generateQuestions() {
+      let pool = [];
+      if (state.range === "standard") {
+        // C3 (48) ~ B5 (83)
+        for (let m = 48; m <= 83; m++) pool.push(m);
+      } else if (state.range === "center") {
+        // C4 (60) ~ B4 (71)
+        for (let m = 60; m <= 71; m++) pool.push(m);
+      } else if (state.range === "violin") {
+        // G3(55), D4(62), A4(69), E5(76) 及上下半音鄰近音
+        pool = [55, 56, 57, 61, 62, 63, 68, 69, 70, 75, 76, 77];
+      }
+
+      const list = [];
+      let prevMidi = null;
+
+      for (let i = 0; i < state.totalQuestions; i++) {
+        let candidates = pool.filter(m => {
+          if (prevMidi === null) return true;
+          const samePitchClass = (m % 12) === (prevMidi % 12);
+          const tooClose = Math.abs(m - prevMidi) <= 2;
+          return !samePitchClass && !tooClose;
+        });
+        if (candidates.length === 0) candidates = pool;
+
+        const midi = candidates[Math.floor(Math.random() * candidates.length)];
+        prevMidi = midi;
+
+        // 隨機初始走音：±45 ~ ±180 cents
+        const sign = Math.random() < 0.5 ? -1 : 1;
+        const magnitude = Math.floor(45 + Math.random() * 135);
+        const initialDetune = sign * magnitude;
+
+        list.push({
+          midi,
+          targetFreq: midiToFreq(midi, state.a4),
+          initialDetune,
+          userErrorCents: 0,
+          userFreq: 0,
+          timeTakenSec: 0
+        });
+      }
+      state.questions = list;
+    }
+
+    function formatMidiLabel(midi) {
+      const pc = midi % 12;
+      const octave = Math.floor(midi / 12) - 1;
+      const info = NOTE_NAMES[pc];
+      return {
+        main: `${info.sharp}${octave}`,
+        sub: info.sharp === info.flat
+          ? `唱名：${info.solfege}`
+          : `等音：${info.flat}${octave} ｜ 唱名：${info.solfege}`
+      };
+    }
+
+    function getCurrentUserFreq() {
+      const q = state.questions[state.currentIndex];
+      const totalCentsFromTarget = q.initialDetune + state.currentOffsetCents;
+      return applyCents(q.targetFreq, totalCentsFromTarget);
+    }
+
+    function updatePlayButtonUI() {
+      const btn = document.getElementById("toggle-sound-btn");
+      const icon = document.getElementById("play-icon");
+      const text = document.getElementById("play-text");
+      if (state.isPlaying) {
+        btn.classList.add("playing");
+        icon.textContent = "🔊";
+        text.textContent = "持續播放中 (點擊暫停)";
+      } else {
+        btn.classList.remove("playing");
+        icon.textContent = "🔇";
+        text.textContent = "已暫停 (點擊播放)";
+      }
+    }
+
+    // 載入單題
+    function loadQuestion(index) {
+      state.currentIndex = index;
+      state.currentOffsetCents = 0;
+      state.answeredCurrent = false;
+      state.questionStartTime = performance.now();
+
+      const q = state.questions[index];
+      const label = formatMidiLabel(q.midi);
+
+      document.getElementById("q-current").textContent = index + 1;
+      document.getElementById("q-total").textContent = state.totalQuestions;
+      document.getElementById("target-note-text").textContent = label.main;
+      document.getElementById("target-enharmonic").textContent = label.sub;
+
+      const slider = document.getElementById("pitch-slider");
+      slider.value = 0;
+      slider.disabled = false;
+
+      document.querySelectorAll(".tune-btn").forEach(b => b.disabled = false);
+      document.getElementById("submit-answer-btn").classList.remove("hidden");
+      document.getElementById("practice-feedback").classList.add("hidden");
+
+      startContinuousTone(getCurrentUserFreq());
+    }
+
+    function adjustPitch(deltaCents) {
+      if (state.answeredCurrent) return;
+      const slider = document.getElementById("pitch-slider");
+      let nextVal = state.currentOffsetCents + deltaCents;
+      nextVal = Math.max(-280, Math.min(280, nextVal));
+      state.currentOffsetCents = nextVal;
+      slider.value = nextVal;
+
+      const freq = getCurrentUserFreq();
+      if (state.isPlaying) {
+        updateToneFrequency(freq);
+      } else {
+        playOneShot(freq, 0.7);
+      }
+    }
+
+    // 根據絕對誤差音分產生分級評語
+    function getPitchComment(absCents) {
+      if (absCents <= 2) {
+        return { tag: "🤖 音叉本體", desc: "誤差 ≤2¢！這已經超越人耳物理極限，你是內建石英震盪器嗎？", cls: "t-god" };
+      } else if (absCents <= 5) {
+        return { tag: "🔬 頻閃調音器", desc: "誤差 ≤5¢！跟專業 Peterson 頻閃調音器一樣準，連弦樂泛音共鳴都挑不出毛病。", cls: "t-god" };
+      } else if (absCents <= 10) {
+        return { tag: "🎛️ 人體調音器", desc: "誤差 ≤10¢！完全達到電子調音器綠燈標準，樂團首席級別的內在音高。", cls: "t-pro" };
+      } else if (absCents <= 18) {
+        return { tag: "🎻 樂團級耳朵", desc: "誤差 ≤18¢！在合奏中能自然融入和聲，幾乎聽不出與標準音的拍頻。", cls: "t-pro" };
+      } else if (absCents <= 30) {
+        return { tag: "🎵 略帶個人詮釋", desc: "誤差 ≤30¢！大概偏了四分之一半音，方向完全正確，再微調一格就進綠燈區了。", cls: "t-mid" };
+      } else if (absCents <= 50) {
+        return { tag: "🧭 微分音探險家", desc: "誤差 30~50¢！剛好卡在兩個半音正中間，有抓到音高輪廓但基準點稍微漂移。", cls: "t-mid" };
+      } else if (absCents <= 85) {
+        return { tag: "🌫️ 記憶稍微飄走", desc: "誤差 50~85¢！快要滑到隔壁半音去了，建議聽一下標準音重新把基準錨定。", cls: "t-low" };
+      } else {
+        return { tag: "🎲 平行宇宙音階", desc: "誤差超過 85¢（將近一個半音）！這題應該是直接移調到隔壁鄰居家了。", cls: "t-low" };
+      }
+    }
+
+    function submitAnswer() {
+      if (state.answeredCurrent) return;
+      state.answeredCurrent = true;
+
+      const q = state.questions[state.currentIndex];
+      const errorCents = q.initialDetune + state.currentOffsetCents;
+      const userFreq = applyCents(q.targetFreq, errorCents);
+      const elapsedSec = (performance.now() - state.questionStartTime) / 1000;
+
+      q.userErrorCents = errorCents;
+      q.userFreq = userFreq;
+      q.timeTakenSec = elapsedSec;
+
+      stopContinuousTone();
+
+      if (state.mode === "practice") {
+        document.getElementById("pitch-slider").disabled = true;
+        document.querySelectorAll(".tune-btn").forEach(b => b.disabled = true);
+        document.getElementById("submit-answer-btn").classList.add("hidden");
+
+        const fbBox = document.getElementById("practice-feedback");
+        fbBox.classList.remove("hidden");
+
+        const absErr = Math.abs(errorCents);
+        const signStr = errorCents > 0 ? "+" : "";
+        const centsEl = document.getElementById("fb-cents-text");
+        centsEl.textContent = `${signStr}${errorCents.toFixed(1)} cents`;
+        centsEl.className = "cents-readout " + (absErr <= 10 ? "c-good" : absErr <= 25 ? "c-ok" : "c-bad");
+
+        const dirText = absErr <= 2
+          ? "完美命中！"
+          : errorCents > 0
+            ? `偏高了 ${absErr.toFixed(1)} 音分`
+            : `偏低了 ${absErr.toFixed(1)} 音分`;
+
+        document.getElementById("fb-detail-text").textContent =
+          `${dirText}（你的頻率：${userFreq.toFixed(2)} Hz ｜ 標準：${q.targetFreq.toFixed(2)} Hz）`;
+        const commentInfo = getPitchComment(absErr);
+        document.getElementById("fb-comment-badge").textContent = `${commentInfo.tag} — ${commentInfo.desc}`;
+
+        const clamped = Math.max(-100, Math.min(100, errorCents));
+        const pct = 50 + (clamped / 100) * 48;
+        document.getElementById("fb-meter-marker").style.left = `${pct}%`;
+
+        document.getElementById("next-question-btn").textContent =
+          state.currentIndex + 1 < state.totalQuestions ? "下一題 ▶" : "查看總結報告 ▶";
+      } else {
+        proceedNext();
+      }
+    }
+
+    function proceedNext() {
+      const nextIdx = state.currentIndex + 1;
+      if (nextIdx >= state.totalQuestions) {
+        showResults();
+        return;
+      }
+
+      if (state.mode === "strict") {
+        const activeArea = document.getElementById("quiz-active-area");
+        const noiseArea = document.getElementById("noise-intermission");
+        activeArea.classList.add("hidden");
+        noiseArea.classList.remove("hidden");
+
+        playMemoryFlushNoise(0.85);
+        setTimeout(() => {
+          noiseArea.classList.add("hidden");
+          activeArea.classList.remove("hidden");
+          loadQuestion(nextIdx);
+        }, 900);
+      } else {
+        loadQuestion(nextIdx);
+      }
+    }
+
+    function showResults() {
+      stopContinuousTone(true);
+      document.getElementById("quiz-screen").classList.add("hidden");
+      document.getElementById("result-screen").classList.remove("hidden");
+
+      const qs = state.questions;
+      const absErrors = qs.map(q => Math.abs(q.userErrorCents));
+      const avgErr = absErrors.reduce((a, b) => a + b, 0) / qs.length;
+      const bestErr = Math.min(...absErrors);
+      const hitCount = absErrors.filter(e => e <= 15).length;
+      const hitRate = Math.round((hitCount / qs.length) * 100);
+      const avgTime = qs.reduce((a, b) => a + b.timeTakenSec, 0) / qs.length;
+
+      document.getElementById("stat-avg-cents").textContent = `${avgErr.toFixed(1)} ¢`;
+      document.getElementById("stat-accuracy").textContent = `${hitRate}% (${hitCount}/${qs.length})`;
+      document.getElementById("stat-best").textContent = `${bestErr.toFixed(1)} ¢`;
+      document.getElementById("stat-time").textContent = `${avgTime.toFixed(1)} s`;
+
+      let rankTitle = "";
+      let rankDesc = "";
+      if (avgErr <= 4) {
+        rankTitle = "🤖 人形音叉 · 頻閃調音器本體";
+        rankDesc = "平均誤差 ≤ 4 音分！你的大腦自帶高精密頻率計，連調音器都要跟你對音。";
+      } else if (avgErr <= 10) {
+        rankTitle = "🎛️ 人體電子調音器 (±10¢ 綠燈制霸)";
+        rankDesc = "平均誤差落在 ±10 音分內！不靠任何參考音就能把樂器調到標準音準，名副其實的活體調音器。";
+      } else if (avgErr <= 18) {
+        rankTitle = "🎻 交響樂團首席級音感";
+        rankDesc = "平均誤差 ≤ 18 音分，具備極穩固的內在音高基準，合奏與獨奏都能精準抓到音準核心。";
+      } else if (avgErr <= 30) {
+        rankTitle = "🎵 進階音高記憶者";
+        rankDesc = "平均誤差在三分之一半音內，音名方位明確，針對高低音兩端或黑鍵多做幾輪就能邁入調音器級別！";
+      } else if (avgErr <= 55) {
+        rankTitle = "🧭 微分音領域探索者";
+        rankDesc = "無參考音盲調難度極高！目前大致落在目標音附近，建議切換「練習模式」用 A/B 比對把基準音釘牢。";
+      } else {
+        rankTitle = "🎲 自由爵士即興家";
+        rankDesc = "在沒有任何基準音提示下盲調容易發生半音偏移，先從「小提琴空弦區」或「中音單八度」暖身吧！";
+      }
+      document.getElementById("rank-title").textContent = rankTitle;
+      document.getElementById("rank-desc").textContent = rankDesc;
+
+      const tbody = document.getElementById("result-tbody");
+      tbody.innerHTML = "";
+
+      qs.forEach((q, idx) => {
+        const tr = document.createElement("tr");
+        const label = formatMidiLabel(q.midi).main;
+        const initSign = q.initialDetune > 0 ? "+" : "";
+        const errSign = q.userErrorCents > 0 ? "+" : "";
+        const absErr = Math.abs(q.userErrorCents);
+        const cls = absErr <= 10 ? "c-good" : absErr <= 25 ? "c-ok" : "c-bad";
+        const cmt = getPitchComment(absErr);
+
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td><strong>${label}</strong></td>
+          <td style="color: var(--text-secondary);">${initSign}${q.initialDetune} ¢</td>
+          <td class="${cls}">${errSign}${q.userErrorCents.toFixed(1)} ¢</td>
+          <td><span class="comment-tag ${cmt.cls}">${cmt.tag}</span></td>
+          <td style="font-size: 0.82rem;">${q.targetFreq.toFixed(1)} / ${q.userFreq.toFixed(1)} Hz</td>
+          <td>
+            <button class="mini-play" data-freq="${q.targetFreq}">標準音</button>
+            <button class="mini-play" data-freq="${q.userFreq}">你的音</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll(".mini-play").forEach(btn => {
+        btn.addEventListener("click", () => {
+          playOneShot(parseFloat(btn.dataset.freq), 1.1);
+        });
+      });
+    }
+
+    // 綁定設定按鈕群組
+    function bindOptionGroup(groupId, stateKey, parseNum = false) {
+      const container = document.getElementById(groupId);
+      container.querySelectorAll(".option-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          container.querySelectorAll(".option-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          state[stateKey] = parseNum ? Number(btn.dataset.val) : btn.dataset.val;
+
+          if (stateKey === "mode") {
+            const desc = document.getElementById("mode-description");
+            if (state.mode === "strict") {
+              desc.innerHTML = "<strong>嚴格盲測模式：</strong>作答期間不顯示任何頻率與音分誤差，題目之間自動播放 0.85 秒柔和粉紅噪音清空短期記憶，全部完成後統一結算絕對音感精準度。";
+            } else {
+              desc.innerHTML = "<strong>練習模式：</strong>每題送出後立即顯示誤差音分（Cents）與調音指針，並可反覆切換聆聽「標準音」與「你的音」進行耳朵校準。";
+            }
+          }
+        });
+      });
+    }
+
+    bindOptionGroup("mode-group", "mode");
+    bindOptionGroup("a4-group", "a4", true);
+    bindOptionGroup("count-group", "totalQuestions", true);
+    bindOptionGroup("wave-group", "wave");
+    bindOptionGroup("range-group", "range");
+
+    // 開始測驗
+    document.getElementById("start-btn").addEventListener("click", () => {
+      initAudio();
+      generateQuestions();
+      document.getElementById("setup-screen").classList.add("hidden");
+      document.getElementById("result-screen").classList.add("hidden");
+      document.getElementById("quiz-screen").classList.remove("hidden");
+
+      document.getElementById("display-a4").textContent = `${state.a4} Hz`;
+      document.getElementById("display-mode").textContent = state.mode === "strict" ? "嚴格盲測" : "練習模式";
+
+      loadQuestion(0);
+    });
+
+    // 播放控制
+    document.getElementById("toggle-sound-btn").addEventListener("click", () => {
+      if (state.isPlaying) {
+        stopContinuousTone();
+      } else {
+        startContinuousTone(getCurrentUserFreq());
+      }
+    });
+
+    document.getElementById("pulse-sound-btn").addEventListener("click", () => {
+      playOneShot(getCurrentUserFreq(), 1.5);
+    });
+
+    // 滑桿與按鈕調音
+    document.getElementById("pitch-slider").addEventListener("input", (e) => {
+      if (state.answeredCurrent) return;
+      state.currentOffsetCents = Number(e.target.value);
+      const freq = getCurrentUserFreq();
+      if (state.isPlaying) {
+        updateToneFrequency(freq);
+      } else {
+        startContinuousTone(freq);
+      }
+    });
+
+    document.querySelectorAll(".tune-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        adjustPitch(Number(btn.dataset.delta));
+      });
+    });
+
+    document.getElementById("submit-answer-btn").addEventListener("click", submitAnswer);
+
+    // 練習模式按鈕
+    document.getElementById("listen-yours-btn").addEventListener("click", () => {
+      const q = state.questions[state.currentIndex];
+      playOneShot(q.userFreq, 1.2);
+    });
+
+    document.getElementById("listen-target-btn").addEventListener("click", () => {
+      const q = state.questions[state.currentIndex];
+      playOneShot(q.targetFreq, 1.2);
+    });
+
+    document.getElementById("next-question-btn").addEventListener("click", proceedNext);
+
+    // 返回與重玩
+    document.getElementById("quit-btn").addEventListener("click", () => {
+      stopContinuousTone(true);
+      document.getElementById("quiz-screen").classList.add("hidden");
+      document.getElementById("setup-screen").classList.remove("hidden");
+    });
+
+    document.getElementById("restart-btn").addEventListener("click", () => {
+      document.getElementById("result-screen").classList.add("hidden");
+      document.getElementById("setup-screen").classList.remove("hidden");
+    });
+
+    // 鍵盤快捷鍵支援
+    window.addEventListener("keydown", (e) => {
+      const quizVisible = !document.getElementById("quiz-screen").classList.contains("hidden");
+      const noiseHidden = document.getElementById("noise-intermission").classList.contains("hidden");
+      if (!quizVisible || !noiseHidden) return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        adjustPitch(e.shiftKey ? -25 : -3);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        adjustPitch(e.shiftKey ? 25 : 3);
+      } else if (e.code === "Space") {
+        e.preventDefault();
+        if (state.isPlaying) stopContinuousTone();
+        else startContinuousTone(getCurrentUserFreq());
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (!state.answeredCurrent) {
+          submitAnswer();
+        } else if (state.mode === "practice") {
+          proceedNext();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
